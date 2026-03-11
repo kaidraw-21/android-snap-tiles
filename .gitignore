@@ -1,0 +1,26 @@
+# Build outputs
+build/
+app/build/
+*.aab
+*.aar
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Keystore / signing
+*.jks
+*.keystore
+keystore.properties
+
+# Generated
+gen/
+out/
