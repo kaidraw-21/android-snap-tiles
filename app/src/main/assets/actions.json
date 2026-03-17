@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "actions": [
+    {
+      "id": "DEVELOPER_MODE",
+      "label": "Developer Mode",
+      "description": "Toggle developer options",
+      "icon": "code",
+      "emoji": "🛠️",
+      "category": "SYSTEM_CONTROLS",
+      "settingType": "global",
+      "settingKey": "development_settings_enabled",
+      "onValue": "1",
+      "offValue": "0",
+      "valueType": "int",
+      "customHandler": "DEVELOPER_MODE",
+      "children": [
+        {
+          "id": "USB_DEBUGGING",
+          "label": "USB Debugging",
+          "description": "ADB mode status tile",
+          "icon": "usb",
+          "emoji": "🔌",
+          "category": "SYSTEM_CONTROLS",
+          "settingType": "global",
+          "settingKey": "adb_enabled",
+          "onValue": "1",
+          "offValue": "0",
+          "valueType": "int"
+        },
+        {
+          "id": "STAY_AWAKE",
+          "label": "Stay Awake",
+          "description": "Prevent screen from sleeping while plugged in",
+          "icon": "light_mode",
+          "emoji": "☀️",
+          "category": "SYSTEM_CONTROLS",
+          "settingType": "global",
+          "settingKey": "stay_on_while_plugged_in",
+          "onValue": "3",
+          "offValue": "0",
+          "valueType": "int"
+        },
+        {
+          "id": "FORCE_RTL",
+          "label": "Force RTL Layout",
+          "description": "Mirror UI for RTL testing",
+          "icon": "format_textdirection_r_to_l",
+          "emoji": "↔️",
+          "category": "SYSTEM_CONTROLS",
+          "settingType": "global",
+          "settingKey": "debug.force_rtl",
+          "onValue": "1",
+          "offValue": "0",
+          "valueType": "int"
+        },
+        {
+          "id": "PROFILE_GPU",
+          "label": "Profile GPU Rendering",
+          "description": "On-screen visual profiling",
+          "icon": "bar_chart",
+          "emoji": "📊",
+          "category": "ADVANCED_DEBUGGING",
+          "settingType": "global",
+          "settingKey": "debug.hwui.profile",
+          "onValue": "visual_bars",
+          "offValue": "",
+          "valueType": "string",
+          "stateCheck": "notEmpty"
+        },
+        {
+          "id": "DEMO_MODE",
+          "label": "Demo Mode",
+          "description": "Clean status bar for screenshots",
+          "icon": "phone_android",
+          "emoji": "📱",
+          "category": "ADVANCED_DEBUGGING",
+          "settingType": "global",
+          "settingKey": "sysui_demo_allowed",
+          "onValue": "1",
+          "offValue": "0",
+          "valueType": "int",
+          "linkedSettings": [
+            { "key": "sysui_tuner_demo_on", "onValue": "1", "offValue": "0", "valueType": "int" }
+          ],
+          "stateCheck": "allLinkedOn"
+        },
+        {
+          "id": "ANIMATOR_SCALE",
+          "label": "Animator Duration Scale",
+          "description": "Quick toggle animation speed",
+          "icon": "speed",
+          "emoji": "⚡",
+          "category": "ADVANCED_DEBUGGING",
+          "settingType": "global",
+          "settingKey": "animator_duration_scale",
+          "onValue": "0.0",
+          "offValue": "1.0",
+          "valueType": "float"
+        }
+      ]
+    },
+    {
+      "id": "ACCESSIBILITY",
+      "label": "Accessibility Services",
+      "description": "Toggle accessibility services",
+      "icon": "accessibility",
+      "emoji": "♿",
+      "category": "SYSTEM_CONTROLS",
+      "settingType": "secure",
+      "settingKey": "enabled_accessibility_services",
+      "onValue": "$restored",
+      "offValue": "",
+      "valueType": "string",
+      "stateCheck": "notEmpty",
+      "cacheKey": "saved_a11y"
+    },
+    {
+      "id": "RUNNING_SERVICES",
+      "label": "Running Services",
+      "description": "View active background tasks",
+      "icon": "memory",
+      "emoji": "🧠",
+      "category": "SYSTEM_CONTROLS",
+      "settingType": "global",
+      "settingKey": "always_finish_activities",
+      "onValue": "1",
+      "offValue": "0",
+      "valueType": "int"
+    }
+  ],
+  "categories": [
+    { "id": "SYSTEM_CONTROLS", "label": "System Controls", "order": 1 },
+    { "id": "ADVANCED_DEBUGGING", "label": "Advanced Debugging", "order": 2 }
+  ]
+}

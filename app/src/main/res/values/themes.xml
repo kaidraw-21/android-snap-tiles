@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.QuickTiles" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#6E5E00</item>
+        <item name="colorPrimaryDark">#534600</item>
+        <item name="colorAccent">#FBD928</item>
+        <item name="android:windowBackground">#FFF9F9F9</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

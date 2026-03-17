@@ -1,0 +1,96 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed 's/[^0-9]*//g')
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > app/release.jks
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+        env:
+          SIGNING_STORE_FILE: app/release.jks
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Rename APK
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          cp "$APK_PATH" "snap-tiles-v${{ steps.version.outputs.version_name }}.apk"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --oneline --no-merges)
+          else
+            COMMITS=$(git log --oneline --no-merges "${PREV_TAG}..HEAD")
+          fi
+
+          {
+            echo "notes<<RELEASE_NOTES_EOF"
+            echo "## What's New"
+            echo ""
+            echo "$COMMITS" | while IFS= read -r line; do
+              echo "- ${line#* }"
+            done
+            echo ""
+            echo "## Installation"
+            echo ""
+            echo "1. Download \`snap-tiles-v${{ steps.version.outputs.version_name }}.apk\`"
+            echo "2. Install on device"
+            echo "3. Grant permission via ADB:"
+            echo '   ```'
+            echo "   adb shell pm grant com.snap.tiles android.permission.WRITE_SECURE_SETTINGS"
+            echo '   ```'
+            echo ""
+            echo "## Requirements"
+            echo ""
+            echo "- Android 8.0+ (API 26)"
+            echo "- ADB access for initial setup"
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Snap Tiles v${{ steps.version.outputs.version_name }}"
+          body: ${{ steps.notes.outputs.notes }}
+          files: "snap-tiles-v${{ steps.version.outputs.version_name }}.apk"

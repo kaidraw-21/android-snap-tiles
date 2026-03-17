@@ -1,17 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.usb.tiledebug">
+    package="com.snap.tiles">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
-        android:label="USB Debug Tile"
-        android:icon="@drawable/ic_usb">
+        android:name="com.snap.tiles.QuickTilesApp"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_app_logo"
+        android:roundIcon="@mipmap/ic_app_logo_round"
+        android:theme="@style/Theme.QuickTiles">
 
-        <service
-            android:name=".UsbDebuggingTileService"
-            android:label="USB Debugging"
-            android:icon="@drawable/ic_usb"
+        <activity
+            android:name="com.snap.tiles.ui.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.QuickTiles">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 3 Fixed Tiles (always enabled) -->
+        <service android:name="com.snap.tiles.tile.UsbDebugTile"
+            android:label="@string/tile_usb_debugging"
+            android:icon="@drawable/ic_tile_usb_debug"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
             android:exported="true">
             <intent-filter>
@@ -19,6 +37,82 @@
             </intent-filter>
         </service>
 
-    </application>
+        <service android:name="com.snap.tiles.tile.DevModeTile"
+            android:label="@string/tile_developer_mode"
+            android:icon="@drawable/ic_tile_dev_mode"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
+        <service android:name="com.snap.tiles.tile.AccessibilityTile"
+            android:label="@string/tile_accessibility"
+            android:icon="@drawable/ic_tile_accessibility"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- 5 Custom Tiles (Five Elements) -->
+        <service android:name="com.snap.tiles.tile.TileKim"
+            android:label="@string/slot_metal"
+            android:icon="@drawable/ic_tile_metal"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.snap.tiles.tile.TileMoc"
+            android:label="@string/slot_wood"
+            android:icon="@drawable/ic_tile_wood"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.snap.tiles.tile.TileThuy"
+            android:label="@string/slot_water"
+            android:icon="@drawable/ic_tile_water"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.snap.tiles.tile.TileHoa"
+            android:label="@string/slot_fire"
+            android:icon="@drawable/ic_tile_fire"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.snap.tiles.tile.TileTho"
+            android:label="@string/slot_earth"
+            android:icon="@drawable/ic_tile_earth"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name="com.snap.tiles.receiver.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
 </manifest>

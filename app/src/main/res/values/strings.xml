@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Snap Tiles</string>
+    <string name="app_title">Snap Tiles</string>
+
+    <!-- Home screen -->
+    <string name="section_permissions">PERMISSIONS</string>
+    <string name="section_default_tiles">DEFAULT TILES</string>
+    <string name="section_custom_tiles">CUSTOM TILES</string>
+    <string name="permission_write_secure">WRITE_SECURE_SETTINGS</string>
+    <string name="permission_required_title">Permission Required</string>
+    <string name="permission_required_desc">Grant WRITE_SECURE_SETTINGS via ADB to enable tile controls.</string>
+    <string name="btn_refresh_permission">Refresh</string>
+    <string name="tap_to_configure">Tap to configure</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_edit">Edit</string>
+    <string name="cd_configure">Configure</string>
+    <string name="cd_fixed">Fixed</string>
+
+    <!-- Fixed tile labels -->
+    <string name="tile_usb_debugging">USB Debugging</string>
+    <string name="tile_developer_mode">Developer Mode</string>
+    <string name="tile_accessibility">Accessibility</string>
+
+    <!-- Custom tile slot names (Five Elements) -->
+    <string name="slot_metal">Metal ⚔️</string>
+    <string name="slot_wood">Wood 🌳</string>
+    <string name="slot_water">Water 💧</string>
+    <string name="slot_fire">Fire 🔥</string>
+    <string name="slot_earth">Earth 🏔️</string>
+
+    <!-- Edit tile screen -->
+    <string name="edit_slot_title">Edit Slot %d</string>
+    <string name="btn_save">Save</string>
+    <string name="section_label">LABEL</string>
+    <string name="tile_label_hint">TILE LABEL</string>
+    <string name="section_actions">ACTIONS</string>
+    <string name="actions_description">All selected actions will toggle together on one tap</string>
+    <string name="cd_add_action">Add action</string>
+    <string name="cd_remove">Remove</string>
+    <string name="cd_back">Back</string>
+
+    <!-- Add action screen -->
+    <string name="add_action_title">Add Action</string>
+    <string name="available_toggles">Available Toggles</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_confirm">Confirm</string>
+    <string name="cd_add">Add</string>
+
+    <!-- Action categories -->
+    <string name="category_system_controls">System Controls</string>
+    <string name="category_advanced_debugging">Advanced Debugging</string>
+
+    <!-- Action labels -->
+    <string name="action_usb_debugging">USB Debugging</string>
+    <string name="action_developer_mode">Developer Mode</string>
+    <string name="action_accessibility">Accessibility Services</string>
+    <string name="action_stay_awake">Stay Awake</string>
+    <string name="action_running_services">Running Services</string>
+    <string name="action_force_rtl">Force RTL Layout</string>
+    <string name="action_profile_gpu">Profile GPU Rendering</string>
+    <string name="action_demo_mode">Demo Mode</string>
+    <string name="action_animator_scale">Animator Duration Scale</string>
+
+    <!-- Action descriptions -->
+    <string name="action_desc_usb_debugging">ADB mode status tile</string>
+    <string name="action_desc_developer_mode">Toggle developer options</string>
+    <string name="action_desc_accessibility">Toggle accessibility services</string>
+    <string name="action_desc_stay_awake">Prevent screen from sleeping</string>
+    <string name="action_desc_running_services">View active background tasks</string>
+    <string name="action_desc_force_rtl">Mirror UI for RTL testing</string>
+    <string name="action_desc_profile_gpu">On-screen visual profiling</string>
+    <string name="action_desc_demo_mode">Clean status bar for screenshots</string>
+    <string name="action_desc_animator_scale">Quick toggle animation speed</string>
+</resources>
