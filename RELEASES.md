@@ -2,6 +2,9 @@
 
 ## v1.0.1 — 2026-03-17
 
+### Download
+**[⬇ snap-tiles-v1.0.1.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.1.apk)**
+
 ### Improvements
 - Optimistic UI update on tile tap — tile state flips instantly without waiting for IO
 - Fix: Custom tile actions now toggle correctly when tile contains both parent and child actions (e.g. DEVELOPER_MODE + USB_DEBUGGING in same slot)
