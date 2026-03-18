@@ -64,6 +64,16 @@
     <string name="action_demo_mode">Demo Mode</string>
     <string name="action_animator_scale">Animator Duration Scale</string>
 
+    <!-- Floating Button -->
+    <string name="section_float_button">FLOATING BUTTON</string>
+    <string name="float_button_title">Floating Button</string>
+    <string name="float_button_desc">Draggable button to toggle your selected tile</string>
+    <string name="float_controlled_slot">Controls slot</string>
+    <string name="float_button_size">Button size</string>
+    <string name="float_overlay_required">Grant "Display over other apps" permission first</string>
+    <string name="float_notif_title">Floating Button active</string>
+    <string name="float_notif_text">Long-press to open Snap Tiles • tap to toggle</string>
+
     <!-- Action descriptions -->
     <string name="action_desc_usb_debugging">ADB mode status tile</string>
     <string name="action_desc_developer_mode">Toggle developer options</string>

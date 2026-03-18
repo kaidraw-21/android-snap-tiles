@@ -2,12 +2,16 @@ package com.snap.tiles.ui.screens
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -41,8 +45,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.snap.tiles.data.Action
 import com.snap.tiles.data.CustomSlotInfo
 import com.snap.tiles.data.FixedTileInfo
+import com.snap.tiles.data.PrefsManager
 import com.snap.tiles.data.TileConfig
 import com.snap.tiles.data.TileConfigRepo
+import com.snap.tiles.service.FloatingButtonService
 import com.snap.tiles.ui.theme.Success
 import com.snap.tiles.R
 
@@ -70,6 +76,7 @@ fun HomeScreen(onEditSlot: (Int) -> Unit) {
                 hasWriteSecure = checkWriteSecureSettings(context.contentResolver)
                 tiles = (1..TileConfigRepo.SLOT_COUNT).map { TileConfigRepo.get(it) }
             })
+            FloatingButtonSection()
             FixedTilesSection(context)
             CustomTilesSection(tiles, onEditSlot)
         }
@@ -266,6 +273,178 @@ private fun CustomTileSlotRow(config: TileConfig, slotInfo: CustomSlotInfo?, has
                 uncheckedThumbColor = MaterialTheme.colorScheme.surfaceContainerLowest, uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest, uncheckedBorderColor = Color.Transparent,
                 disabledUncheckedThumbColor = MaterialTheme.colorScheme.surfaceContainerLowest, disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest, disabledUncheckedBorderColor = Color.Transparent
             ), modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun FloatingButtonSection() {
+    val context = LocalContext.current
+    var enabled by remember { mutableStateOf(PrefsManager.isFloatVisible()) }
+    var selectedSlot by remember { mutableStateOf(PrefsManager.getControlledSlot()) }
+    var selectedSize by remember { mutableStateOf(PrefsManager.getButtonSize()) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionHeader(stringResource(R.string.section_float_button))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Toggle row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.float_button_title),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            stringResource(R.string.float_button_desc),
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            lineHeight = 18.sp
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Switch(
+                        checked = enabled,
+                        onCheckedChange = { on ->
+                            if (on) {
+                                if (!Settings.canDrawOverlays(context)) {
+                                    Toast.makeText(context, context.getString(R.string.float_overlay_required), Toast.LENGTH_LONG).show()
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    )
+                                } else {
+                                    enabled = true
+                                    PrefsManager.setFloatVisible(true)
+                                    FloatingButtonService.start(context)
+                                }
+                            } else {
+                                enabled = false
+                                PrefsManager.setFloatVisible(false)
+                                FloatingButtonService.stop(context)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            uncheckedBorderColor = Color.Transparent
+                        ),
+                        modifier = Modifier.height(24.dp)
+                    )
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f))
+
+                // Slot selector
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        stringResource(R.string.float_controlled_slot).uppercase(),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    // Horizontal scroll to prevent overflow when many slots are shown
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TileConfigRepo.customSlots.forEach { slotInfo ->
+                            val isSelected = slotInfo.slotIndex == selectedSlot
+                            Surface(
+                                onClick = {
+                                    selectedSlot = slotInfo.slotIndex
+                                    PrefsManager.setControlledSlot(slotInfo.slotIndex)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(slotInfo.iconRes),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                               else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        stringResource(slotInfo.labelRes),
+                                        fontSize = 13.sp,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Size selector
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        stringResource(R.string.float_button_size).uppercase(),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(
+                            "SMALL" to "S",
+                            "MEDIUM" to "M",
+                            "LARGE" to "L"
+                        ).forEach { (key, label) ->
+                            val isSelected = selectedSize == key
+                            Surface(
+                                onClick = {
+                                    selectedSize = key
+                                    PrefsManager.setButtonSize(key)
+                                    if (enabled) {
+                                        FloatingButtonService.stop(context)
+                                        FloatingButtonService.start(context)
+                                    }
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder,
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        label,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -33,6 +33,8 @@ object PrefsManager {
     const val KEY_POS_Y = "pos_y"
     const val DEFAULT_POS_X = 100
     const val DEFAULT_POS_Y = 200
+    const val KEY_BUTTON_SIZE = "button_size"
+    const val DEFAULT_BUTTON_SIZE = "MEDIUM"
 
     fun init(context: Context) {
         Log.d(TAG, "init()")
@@ -164,5 +166,16 @@ object PrefsManager {
     fun saveFloatPosition(x: Int, y: Int) {
         Log.d(TAG, "saveFloatPosition(x=$x, y=$y)")
         floatPos.edit().putInt(KEY_POS_X, x).putInt(KEY_POS_Y, y).apply()
+    }
+
+    fun getButtonSize(): String {
+        val result = floatConfig.getString(KEY_BUTTON_SIZE, DEFAULT_BUTTON_SIZE) ?: DEFAULT_BUTTON_SIZE
+        Log.d(TAG, "getButtonSize() -> $result")
+        return result
+    }
+
+    fun setButtonSize(size: String) {
+        Log.d(TAG, "setButtonSize(size=$size)")
+        floatConfig.edit().putString(KEY_BUTTON_SIZE, size).apply()
     }
 }
