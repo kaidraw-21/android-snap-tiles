@@ -1,5 +1,31 @@
 # Release Notes
 
+## v1.0.2 — 2026-03-18
+
+### Download
+**[⬇ snap-tiles-v1.0.2.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.2.apk)**
+
+### What's New
+
+**Floating Tile Button**
+- Toggle switch now works correctly (fixed duplicate service conflict)
+- Long-press opens the app
+- Snap to edge — button animates to nearest left/right edge after drag
+- Configurable size: Small (40dp) / Medium (48dp) / Large (56dp)
+- Reduced background opacity for less visual intrusion
+
+**Config Card**
+- Icon list is now horizontally scrollable (fixes overflow on small screens)
+- Fixed border rendering on tile selector chips
+
+### Screenshots
+
+| Floating Button | Snap to Edge | Custom Tiles |
+|---|---|---|
+| ![Floating Button](media/floating-snap.jpeg) | ![Snap to Edge](media/floating-snap-visual.jpeg) | ![Custom Tiles](media/multiple-and-custom-tile.jpeg) |
+
+---
+
 ## v1.0.1 — 2026-03-17
 
 ### Download

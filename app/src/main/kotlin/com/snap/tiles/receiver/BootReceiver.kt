@@ -7,7 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import com.snap.tiles.data.PrefsManager
 import com.snap.tiles.data.TileConfigRepo
-import com.snap.tiles.service.FloatingButtonService
+import com.snap.tiles.float.FloatingTileService
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -20,7 +20,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
         TileConfigRepo.initAllSlots(context)
         if (PrefsManager.isFloatVisible() && Settings.canDrawOverlays(context)) {
-            FloatingButtonService.start(context)
+            FloatingTileService.start(context)
         }
     }
 }

@@ -7,10 +7,9 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -51,7 +50,6 @@ import com.snap.tiles.data.PrefsManager
 import com.snap.tiles.data.TileConfig
 import com.snap.tiles.data.TileConfigRepo
 import com.snap.tiles.float.FloatingTileService
-import com.snap.tiles.service.FloatingButtonService
 import com.snap.tiles.ui.theme.Success
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,7 +70,7 @@ fun HomeScreen(onEditSlot: (Int) -> Unit) {
             hasWriteSecure = checkWriteSecureSettings(context.contentResolver)
             hasOverlay = Settings.canDrawOverlays(context)
             tiles = (1..TileConfigRepo.SLOT_COUNT).map { TileConfigRepo.get(it) }
-            // If user came back from overlay permission settings
+            // If user came back from overlay permission settings and it's now granted
             if (PrefsManager.isFloatVisible() && hasOverlay) {
                 isFloatEnabled = true
                 FloatingTileService.start(context)
@@ -97,7 +95,6 @@ fun HomeScreen(onEditSlot: (Int) -> Unit) {
                     tiles = (1..TileConfigRepo.SLOT_COUNT).map { TileConfigRepo.get(it) }
                 }
             )
-            FloatingButtonSection()
             FixedTilesSection(context)
             CustomTilesSection(tiles, onEditSlot)
             FloatingTileSection(
@@ -107,14 +104,14 @@ fun HomeScreen(onEditSlot: (Int) -> Unit) {
                 onToggle = { newEnabled ->
                     if (newEnabled) {
                         if (!Settings.canDrawOverlays(context)) {
-                            // Request permission first — save intent so we resume correctly
                             PrefsManager.setFloatVisible(true)
                             isFloatEnabled = true
-                            val intent = Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:${context.packageName}")
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:${context.packageName}")
+                                )
                             )
-                            context.startActivity(intent)
                         } else {
                             PrefsManager.setFloatVisible(true)
                             isFloatEnabled = true
@@ -375,178 +372,6 @@ private fun CustomTileSlotRow(config: TileConfig, slotInfo: CustomSlotInfo?, has
 }
 
 @Composable
-private fun FloatingButtonSection() {
-    val context = LocalContext.current
-    var enabled by remember { mutableStateOf(PrefsManager.isFloatVisible()) }
-    var selectedSlot by remember { mutableStateOf(PrefsManager.getControlledSlot()) }
-    var selectedSize by remember { mutableStateOf(PrefsManager.getButtonSize()) }
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SectionHeader(stringResource(R.string.section_float_button))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                // Toggle row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.float_button_title),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            stringResource(R.string.float_button_desc),
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            lineHeight = 18.sp
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Switch(
-                        checked = enabled,
-                        onCheckedChange = { on ->
-                            if (on) {
-                                if (!Settings.canDrawOverlays(context)) {
-                                    Toast.makeText(context, context.getString(R.string.float_overlay_required), Toast.LENGTH_LONG).show()
-                                    context.startActivity(
-                                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
-                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    )
-                                } else {
-                                    enabled = true
-                                    PrefsManager.setFloatVisible(true)
-                                    FloatingButtonService.start(context)
-                                }
-                            } else {
-                                enabled = false
-                                PrefsManager.setFloatVisible(false)
-                                FloatingButtonService.stop(context)
-                            }
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            uncheckedBorderColor = Color.Transparent
-                        ),
-                        modifier = Modifier.height(24.dp)
-                    )
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f))
-
-                // Slot selector
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        stringResource(R.string.float_controlled_slot).uppercase(),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    // Horizontal scroll to prevent overflow when many slots are shown
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        TileConfigRepo.customSlots.forEach { slotInfo ->
-                            val isSelected = slotInfo.slotIndex == selectedSlot
-                            Surface(
-                                onClick = {
-                                    selectedSlot = slotInfo.slotIndex
-                                    PrefsManager.setControlledSlot(slotInfo.slotIndex)
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.surfaceContainerHigh,
-                                border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(slotInfo.iconRes),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                                               else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        stringResource(slotInfo.labelRes),
-                                        fontSize = 13.sp,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                                                else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Size selector
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        stringResource(R.string.float_button_size).uppercase(),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(
-                            "SMALL" to "S",
-                            "MEDIUM" to "M",
-                            "LARGE" to "L"
-                        ).forEach { (key, label) ->
-                            val isSelected = selectedSize == key
-                            Surface(
-                                onClick = {
-                                    selectedSize = key
-                                    PrefsManager.setButtonSize(key)
-                                    if (enabled) {
-                                        FloatingButtonService.stop(context)
-                                        FloatingButtonService.start(context)
-                                    }
-                                },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.surfaceContainerHigh,
-                                border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder,
-                                modifier = Modifier.size(44.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        label,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 14.sp,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                                                else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun SectionHeader(title: String) {
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -568,6 +393,7 @@ private fun FloatingTileSection(
 
     var selectedTileId by remember { mutableStateOf(PrefsManager.getFloatTileId()) }
     var selectedIconIndex by remember { mutableStateOf(PrefsManager.getFloatIconIndex()) }
+    var selectedSize by remember { mutableStateOf(PrefsManager.getButtonSize()) }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SectionHeader(stringResource(R.string.section_floating_tile))
@@ -649,11 +475,26 @@ private fun FloatingTileSection(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
                         modifier = Modifier.padding(horizontal = 20.dp)
                     )
+                    // Icon selector — horizontal scroll to prevent overflow
                     FloatIconSelector(
                         selectedIndex = selectedIconIndex,
                         onSelect = { index ->
                             selectedIconIndex = index
                             PrefsManager.setFloatIconIndex(index)
+                            FloatingTileService.stop(context)
+                            FloatingTileService.start(context)
+                        }
+                    )
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
+                    // Size selector
+                    FloatSizeSelector(
+                        selectedSize = selectedSize,
+                        onSelect = { size ->
+                            selectedSize = size
+                            PrefsManager.setButtonSize(size)
                             FloatingTileService.stop(context)
                             FloatingTileService.start(context)
                         }
@@ -732,8 +573,8 @@ private fun TileChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
         shape = RoundedCornerShape(8.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
         else MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = if (isSelected) Modifier
-        else Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+        border = if (isSelected) null
+        else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Text(
             label,
@@ -759,7 +600,11 @@ private fun FloatIconSelector(selectedIndex: Int, onSelect: (Int) -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 0.8.sp
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // horizontalScroll prevents overflow when icons exceed screen width
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             FloatingTileService.FLOAT_ICONS.forEachIndexed { index, iconRes ->
                 val isSelected = selectedIndex == index
                 Surface(
@@ -769,9 +614,7 @@ private fun FloatIconSelector(selectedIndex: Int, onSelect: (Int) -> Unit) {
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
                     else MaterialTheme.colorScheme.surfaceContainerHigh,
                     border = if (isSelected) null
-                    else androidx.compose.foundation.BorderStroke(
-                        1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                    )
+                    else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -779,6 +622,46 @@ private fun FloatIconSelector(selectedIndex: Int, onSelect: (Int) -> Unit) {
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FloatSizeSelector(selectedSize: String, onSelect: (String) -> Unit) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            stringResource(R.string.float_button_size),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 0.8.sp
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("SMALL" to "S", "MEDIUM" to "M", "LARGE" to "L").forEach { (key, label) ->
+                val isSelected = selectedSize == key
+                Surface(
+                    onClick = { onSelect(key) },
+                    modifier = Modifier.size(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = if (isSelected) null
+                    else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            label,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

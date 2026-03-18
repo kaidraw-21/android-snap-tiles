@@ -27,3 +27,5 @@ out/
 
 # Heap dumps
 *.hprof
+.claude/
+.ai/

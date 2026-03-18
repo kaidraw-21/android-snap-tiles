@@ -8,6 +8,8 @@ import android.app.Service
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.animation.ValueAnimator
+import androidx.core.animation.doOnEnd
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.IBinder
@@ -15,6 +17,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
+import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.app.NotificationCompat
@@ -68,7 +71,12 @@ class FloatingTileService : Service() {
 
     private fun addFloatingView() {
         val density = resources.displayMetrics.density
-        val sizePx = (BUTTON_SIZE_DP * density).toInt()
+        val sizeDp = when (PrefsManager.getButtonSize()) {
+            "SMALL" -> 40
+            "LARGE" -> 56
+            else -> 48 // MEDIUM
+        }
+        val sizePx = (sizeDp * density).toInt()
         val (savedX, savedY) = PrefsManager.getFloatPosition()
 
         val params = WindowManager.LayoutParams(
@@ -119,6 +127,16 @@ class FloatingTileService : Service() {
         var lastRawX = 0f
         var lastRawY = 0f
         var wasDragging = false
+        var longPressHandled = false
+
+        val longPressRunnable = Runnable {
+            longPressHandled = true
+            Log.d(TAG, "long press → open app")
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+        }
 
         view.setOnTouchListener { _, event ->
             when (event.action) {
@@ -126,6 +144,8 @@ class FloatingTileService : Service() {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     wasDragging = false
+                    longPressHandled = false
+                    view.postDelayed(longPressRunnable, LONG_PRESS_THRESHOLD_MS)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -135,6 +155,7 @@ class FloatingTileService : Service() {
                         (abs(event.rawX - downRawX) > DRAG_THRESHOLD || abs(event.rawY - downRawY) > DRAG_THRESHOLD)
                     ) {
                         wasDragging = true
+                        view.removeCallbacks(longPressRunnable)
                     }
                     if (wasDragging) {
                         params.x += dx.toInt()
@@ -145,15 +166,40 @@ class FloatingTileService : Service() {
                     true
                 }
                 MotionEvent.ACTION_UP -> {
+                    view.removeCallbacks(longPressRunnable)
                     if (wasDragging) {
-                        PrefsManager.saveFloatPosition(params.x, params.y)
-                    } else {
+                        snapToEdge(view, params)
+                    } else if (!longPressHandled) {
                         onTileTap()
                     }
                     true
                 }
+                MotionEvent.ACTION_CANCEL -> {
+                    view.removeCallbacks(longPressRunnable)
+                    true
+                }
                 else -> false
             }
+        }
+    }
+
+    // ── Snap to edge ─────────────────────────────────────────────────────────
+
+    private fun snapToEdge(view: FrameLayout, params: WindowManager.LayoutParams) {
+        val screenWidth = resources.displayMetrics.widthPixels
+        val buttonWidth = params.width
+        val targetX = if (params.x + buttonWidth / 2 < screenWidth / 2) 0 else screenWidth - buttonWidth
+        val startX = params.x
+
+        ValueAnimator.ofInt(startX, targetX).apply {
+            duration = 250
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { animator ->
+                params.x = animator.animatedValue as Int
+                runCatching { windowManager.updateViewLayout(view, params) }
+            }
+            doOnEnd { PrefsManager.saveFloatPosition(params.x, params.y) }
+            start()
         }
     }
 
@@ -233,8 +279,8 @@ class FloatingTileService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Floating Tile Active")
-            .setContentText("Tap to open Snap Tiles")
+            .setContentTitle(getString(R.string.float_notif_title))
+            .setContentText(getString(R.string.float_notif_text))
             .setSmallIcon(R.drawable.ic_tile_icon)
             .setContentIntent(tapIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -247,12 +293,13 @@ class FloatingTileService : Service() {
         const val NOTIF_ID = 2001
         const val BUTTON_SIZE_DP = 56
         const val DRAG_THRESHOLD = 12f
+        const val LONG_PRESS_THRESHOLD_MS = 500L
         const val ACTION_REFRESH = "com.snap.tiles.FLOAT_REFRESH"
 
         // Colors from the app's Stitch theme (hardcoded to avoid TypedValue in service)
-        const val COLOR_ACTIVE_BG = 0xFFFBD928.toInt()    // PrimaryContainer
+        const val COLOR_ACTIVE_BG = 0xCCFBD928.toInt()    // PrimaryContainer ~80% opacity
         const val COLOR_ACTIVE_ICON = 0xFF6F5E00.toInt()  // OnPrimaryContainer
-        const val COLOR_INACTIVE_BG = 0xFFE8E8E8.toInt()  // SurfaceContainerHigh
+        const val COLOR_INACTIVE_BG = 0xCCE8E8E8.toInt()  // SurfaceContainerHigh ~80% opacity
         const val COLOR_INACTIVE_ICON = 0xFF4C4733.toInt() // OnSurfaceVariant
 
         val FLOAT_ICONS = listOf(

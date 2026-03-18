@@ -6,9 +6,20 @@ Quick Settings tiles to toggle system settings on Android with a single tap — 
 
 - **Fixed Tiles** — USB Debugging, Developer Mode, Accessibility (always enabled)
 - **Custom Tiles** — Up to 5 configurable slots with multiple actions per tile
+- **Floating Tile Button** — Draggable overlay button, snaps to edge, long-press to open app
 - **Smart Caching** — Remembers Accessibility services and USB state, restores on re-enable
 - **System Controls** — Stay Awake, Running Services, Force RTL Layout
 - **Advanced Debugging** — Profile GPU Rendering, Demo Mode, Animator Duration Scale
+
+## Screenshots
+
+| Floating Button | Snap to Edge | Custom Tiles |
+|---|---|---|
+| ![Floating Button](media/floating-snap.jpeg) | ![Snap to Edge](media/floating-snap-visual.jpeg) | ![Custom Tiles](media/multiple-and-custom-tile.jpeg) |
+
+## Demo
+
+![Demo](media/howtouse.gif)
 
 ## Installation
 
@@ -16,7 +27,7 @@ Quick Settings tiles to toggle system settings on Android with a single tap — 
 
 Grab the latest release from the [Releases page](https://github.com/kaidraw-21/android-snap-tiles/blob/main/RELEASES.md).
 
-**[⬇ Download snap-tiles-v1.0.1.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.1.apk)**
+**[⬇ Download snap-tiles-v1.0.2.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.2.apk)**
 
 ### Build from source
 
@@ -40,10 +51,6 @@ Then pull down Quick Settings → Edit (pencil icon) → drag the tiles you want
 - No root required.
 - Fixed tiles are always enabled — no on/off switch.
 - Accessibility tile caches active services and restores them on re-enable.
-
-## Demo
-
-![Demo](media/howtouse.gif)
 
 ## Changelog
 
