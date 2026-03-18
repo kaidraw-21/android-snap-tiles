@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.NoDisplay" parent="android:Theme.NoDisplay" />
+
     <style name="Theme.QuickTiles" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">#6E5E00</item>
         <item name="colorPrimaryDark">#534600</item>

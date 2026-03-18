@@ -7,6 +7,9 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -50,6 +53,7 @@ import com.snap.tiles.data.PrefsManager
 import com.snap.tiles.data.TileConfig
 import com.snap.tiles.data.TileConfigRepo
 import com.snap.tiles.float.FloatingTileService
+import com.snap.tiles.ui.ShortcutActivity
 import com.snap.tiles.ui.theme.Success
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +128,7 @@ fun HomeScreen(onEditSlot: (Int) -> Unit) {
                     }
                 }
             )
+            ShortcutSection(tiles = tiles)
         }
     }
 }
@@ -667,6 +672,119 @@ private fun FloatSizeSelector(selectedSize: String, onSelect: (String) -> Unit) 
                     }
                 }
             }
+        }
+    }
+}
+
+// ── Shortcut Section ──────────────────────────────────────────────────────────
+
+@Composable
+private fun ShortcutSection(tiles: List<TileConfig>) {
+    val context = LocalContext.current
+    val slotInfoMap = remember { TileConfigRepo.customSlots.associateBy { it.slotIndex } }
+    val isSupported = remember { ShortcutManagerCompat.isRequestPinShortcutSupported(context) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionHeader(stringResource(R.string.section_shortcuts))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                if (!isSupported) {
+                    Text(
+                        stringResource(R.string.shortcut_not_supported),
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.shortcut_desc),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 4.dp)
+                    )
+                    tiles.forEachIndexed { index, config ->
+                        val slotInfo = slotInfoMap[config.slotIndex] ?: return@forEachIndexed
+                        val label = config.label.takeIf { it.isNotBlank() }
+                            ?: stringResource(slotInfo.labelRes)
+                        ShortcutSlotRow(
+                            label = label,
+                            slotInfo = slotInfo,
+                            hasActions = config.actions.isNotEmpty(),
+                            onAddToHomeScreen = {
+                                val shortcutIntent = Intent(context, ShortcutActivity::class.java).apply {
+                                    action = Intent.ACTION_VIEW
+                                    putExtra("slot_index", config.slotIndex)
+                                }
+                                val shortcut = ShortcutInfoCompat.Builder(
+                                    context, "shortcut_slot_${config.slotIndex}"
+                                )
+                                    .setShortLabel(label)
+                                    .setIcon(IconCompat.createWithResource(context, slotInfo.iconRes))
+                                    .setIntent(shortcutIntent)
+                                    .build()
+                                ShortcutManagerCompat.requestPinShortcut(context, shortcut, null)
+                            }
+                        )
+                        if (index < tiles.lastIndex) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f),
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortcutSlotRow(
+    label: String,
+    slotInfo: CustomSlotInfo,
+    hasActions: Boolean,
+    onAddToHomeScreen: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(36.dp),
+            shape = RoundedCornerShape(10.dp),
+            color = if (hasActions) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(slotInfo.iconRes),
+                    contentDescription = label,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (hasActions) MaterialTheme.colorScheme.onPrimaryContainer
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Text(
+            text = label,
+            fontWeight = FontWeight.Medium,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f),
+            color = if (hasActions) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
+        FilledTonalButton(
+            onClick = onAddToHomeScreen,
+            enabled = hasActions,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+            modifier = Modifier.height(32.dp)
+        ) {
+            Text(stringResource(R.string.btn_add_to_home_screen), fontSize = 11.sp)
         }
     }
 }

@@ -83,6 +83,12 @@
     <string name="float_select_tile">Select Tile</string>
     <string name="float_select_icon">Select Icon</string>
 
+    <!-- Shortcuts section -->
+    <string name="section_shortcuts">SHORTCUTS</string>
+    <string name="shortcut_desc">Add a home screen shortcut to toggle a tile with one tap</string>
+    <string name="btn_add_to_home_screen">Add to Home Screen</string>
+    <string name="shortcut_not_supported">Not supported by this launcher</string>
+
     <!-- Action descriptions -->
     <string name="action_desc_usb_debugging">ADB mode status tile</string>
     <string name="action_desc_developer_mode">Toggle developer options</string>
