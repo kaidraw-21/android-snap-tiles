@@ -33,7 +33,7 @@ Các ô Cài đặt nhanh để bật/tắt cài đặt hệ thống trên Andro
 
 Tải bản phát hành mới nhất từ [Trang bản phát hành](https://github.com/kaidraw-21/android-snap-tiles/blob/main/RELEASES.md).
 
-**[⬇ Tải về snap-tiles-v1.0.2.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.2.apk)**
+**[⬇ Tải về snap-tiles-v1.0.3.apk](https://github.com/kaidraw-21/android-snap-tiles/raw/main/download/snap-tiles-v1.0.3.apk)**
 
 ### Xây dựng từ mã nguồn
 
