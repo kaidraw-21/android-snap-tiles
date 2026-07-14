@@ -30,6 +30,9 @@
           "sideEffects": {
             "onEnable": [
               { "settingType": "global", "key": "adb_wifi_enabled", "value": "1", "valueType": "int" }
+            ],
+            "onDisable": [
+              { "settingType": "global", "key": "adb_wifi_enabled", "value": "0", "valueType": "int" }
             ]
           }
         },
